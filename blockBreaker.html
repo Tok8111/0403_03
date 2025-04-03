@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Block Breaker</title>
+	<style>
+		#gameCanvas {
+			border: 1px solid black;
+			background-color: #87CEEB;
+		}
+	</style>
+</head>
+<body onload="startGame()">
+	<canvas id="gameCanvas" width="640" height="480"></canvas>
+	<script>
+		var canvas;
+		var context;
+
+		var ball = {
+			x: 320,
+			y: 240,
+			radius: 10,
+			speedX: 5,
+			speedY: 5
+		};
+
+		var paddle = {
+			x: 250,
+			y: 460,
+			width: 100,
+			height: 10,
+			speed: 10
+		};
+
+		var blocks = [];
+		var blockWidth = 50;
+		var blockHeight = 20;
+
+		var score = 0;
+
+		function startGame() {
+			canvas = document.getElementById("gameCanvas");
+			context = canvas.getContext("2d");
+
+			document.addEventListener("keydown", handleKeyDown);
+			document.addEventListener("keyup", handleKeyUp);
+
+			resetGame();
+			setInterval(updateGame, 20);
+		}
+
+		function resetGame() {
+			// Reset ball
+			ball.x = canvas.width / 2;
+			ball.y = canvas.height / 2;
+			ball.speedX = 5;
+			ball.speedY = -5;
+
+			// Reset paddle
+			paddle.x = canvas.width / 2 - paddle.width / 2;
+			paddle.y = 460;
+
+			// Reset blocks
+			blocks = [];
+			for (var row = 0; row < 3; row++) {
+				for (var col = 0; col < 10; col++) {
+					blocks.push({
+						x: col * blockWidth + 10,
+						y: row * blockHeight + 50,
+						width: blockWidth,
+						height: blockHeight,
+						color: getRandomColor(),
+						visible: true
+					});
+				}
+			}
+
+			score = 0;
+		}
+
+		function updateGame() {
+			context.clearRect(0, 0, canvas.width, canvas.height);
+
+			drawBall();
+			drawPaddle();
+			drawBlocks();
+			drawScore();
+
+			moveBall();
+			movePaddle();
+			checkCollisions();
+		}
+
+		function drawBall() {
+			context.beginPath();
+			context.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
+			context.fillStyle = "red";
+			context.fill();
+			context.closePath();
+		}
+
+		function drawPaddle() {
+			context.fillStyle = "blue";
+			context.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+		}
+
+		function drawBlocks() {
+			for (var i = 0; i < blocks.length; i++) {
+				if (blocks[i].visible) {
+context.fillStyle = blocks[i].color;
+context.fillRect(blocks[i].x, blocks[i].y, blocks[i].width, blocks[i].height);
+}
+}
+}
+	function drawScore() {
+		context.fillStyle = "black";
+		context.font = "20px Arial";
+		context.fillText("Score: " + score, 10, 25);
+	}
+
+	function moveBall() {
+		ball.x += ball.speedX;
+		ball.y += ball.speedY;
+
+		// Check if ball hits left or right wall
+		if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+			ball.speedX = -ball.speedX;
+		}
+
+		// Check if ball hits top wall
+		if (ball.y - ball.radius < 0) {
+			ball.speedY = -ball.speedY;
+		}
+
+		// Check if ball hits bottom wall
+		if (ball.y + ball.radius > canvas.height) {
+			resetGame();
+		}
+	}
+
+	function movePaddle() {
+		if (leftKeyDown) {
+			paddle.x -= paddle.speed;
+			if (paddle.x < 0) {
+				paddle.x = 0;
+			}
+		}
+
+		if (rightKeyDown) {
+			paddle.x += paddle.speed;
+			if (paddle.x + paddle.width > canvas.width) {
+				paddle.x = canvas.width - paddle.width;
+			}
+		}
+	}
+
+	function checkCollisions() {
+		// Check if ball hits paddle
+		if (collision(ball, paddle)) {
+			ball.speedY = -ball.speedY;
+		}
+
+		// Check if ball hits blocks
+		for (var i = 0; i < blocks.length; i++) {
+			if (collision(ball, blocks[i]) && blocks[i].visible) {
+				ball.speedY = -ball.speedY;
+				blocks[i].visible = false;
+				score++;
+			}
+		}
+	}
+
+	function collision(object1, object2) {
+		if (object1.x < object2.x + object2.width && object1.x + object1.radius * 2 > object2.x &&
+			object1.y < object2.y + object2.height && object1.y + object1.radius * 2 > object2.y) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function getRandomColor() {
+		var letters = "0123456789ABCDEF";
+		var color = "#";
+		for (var i = 0; i < 6; i++) {
+			color += letters[Math.floor(Math.random() * 16)];
+		}
+		return color;
+	}
+
+	var leftKeyDown = false;
+	var rightKeyDown = false;
+
+	function handleKeyDown(event) {
+		if (event.keyCode == 37) { // Left arrow
+			leftKeyDown = true;
+		} else if (event.keyCode == 39) { // Right arrow
+			rightKeyDown = true;
+		}
+	}
+
+	function handleKeyUp(event) {
+		if (event.keyCode == 37) { // Left arrow
+			leftKeyDown = false;
+		} else if (event.keyCode == 39) { // Right arrow
+			rightKeyDown = false;
+		}
+	}
+</script>
+
